@@ -58,6 +58,7 @@ long t = 0;
 
 
 void setup() {
+  Serial.begin(115200);
   Keyboard.begin();
   Joystick.useManualSend(true);
   int historyA = 0;
@@ -97,6 +98,7 @@ void setup() {
   switch_TC.update();
 
   t = millis();
+  Serial.print(analogRead(A3));
 }
 
 
@@ -106,6 +108,8 @@ void loop() {
     uint8_t newstateC;
     int btn_down;
     int btn_up;
+    int yAxisTrim = 0;
+    int brakePos = 0;
 
     switch_LB.update();
     switch_TA.update();
@@ -182,11 +186,13 @@ void loop() {
     if ((millis() - t) > 10) {
       t = millis();
       int cnt_down = 1;
-      
+
+      yAxisTrim = map(analogRead(A2), 0, 1023, -150, 150);
+      brakePos = analogRead(A3);
       Joystick.X(map(analogRead(A0), 0, 1023, 1023, 0));
-      Joystick.Y(map(analogRead(A1), 0, 1023, 1023, 0));
+      Joystick.Y(map(analogRead(A1), 0, 1023, 1023, 0) + yAxisTrim); 
       Joystick.Z(analogRead(A2));
-      Joystick.sliderLeft(analogRead(A3));
+      Joystick.sliderLeft(brakePos);
       Joystick.sliderRight(analogRead(A4));
       Joystick.button(13, !digitalRead(B_TA));
       Joystick.button(14, !digitalRead(B_TB));
@@ -194,6 +200,10 @@ void loop() {
       //Joystick.button(16, !digitalRead(SW_TA));
       //Joystick.button(17, !digitalRead(SW_TB));
       //Joystick.button(18, !digitalRead(SW_TC));
+      Serial.println(analogRead(A3));
+      if (brakePos > 1020) {
+        Keyboard.print('.');
+      }
 
       // Rotary encoder and SW A
       if (digitalRead(SW_LA) == HIGH) {
